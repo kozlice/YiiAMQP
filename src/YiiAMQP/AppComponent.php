@@ -15,12 +15,12 @@
 
 namespace YiiAMQP;
 
+use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+
 /**
  * YiiAMQP
- *
  * The class is a Yii CApplicationCompontent to be used as a component in Yii applications.
- *
- *
  * @package    YiiAMQP
  * @subpackage Common
  * @author     Marc Teichtahl <marc@teichtahl.com>
@@ -50,30 +50,49 @@ class AppComponent extends \CApplicationComponent {
      * @param string $password Password of the authorised rabbitMQ user. If NULL configuration setting will be used
      * @param string $vhost virtual rabbitMQ server. If NULL configuration setting will be used
      *
-     * @return An AMQP channel or FALSE on failure
+     * @return AMQPChannel An AMQP channel or FALSE on failure
      */
     public function createConnection($host = NULL, $port = NULL, $user = NULL, $password = NULL, $vhost = NULL) {
 
         \Yii::log('[' . get_class() . '] Creating connection', 'info');
 
-
-        if ($host)
+        if ($host) {
             $this->server['host'] = $host;
+        }
 
-        if ($port)
+        if ($port) {
             $this->server['port'] = $port;
+        }
 
-        if ($user)
+        if ($user) {
             $this->server['user'] = $user;
+        }
 
-        if ($password)
+        if ($password) {
             $this->server['password'] = $password;
+        }
 
-        if ($vhost)
+        if ($vhost) {
             $this->server['vhost'] = $vhost;
+        }
 
 // create the connection using $server as the config
-        $this->connection = new \PhpAmqpLib\Connection\AMQPConnection($this->server['host'], $this->server['port'], $this->server['user'], $this->server['password'], $this->server['vhost']);
+        $this->connection = new AMQPStreamConnection(
+            $this->server['host'],
+            $this->server['port'],
+            $this->server['user'],
+            $this->server['password'],
+            $this->server['vhost'],
+            isset($this->server['insist']) ? $this->server['insist'] : false,
+            isset($this->server['login_method']) ? $this->server['login_method'] : 'AMQPLAIN',
+            isset($this->server['login_response']) ? $this->server['login_response'] : null,
+            isset($this->server['locale']) ? $this->server['locale'] : 'en_US',
+            isset($this->server['connection_timeout']) ? $this->server['connection_timeout'] : 3.0,
+            isset($this->server['read_write_timeout']) ? $this->server['read_write_timeout'] : 3.0,
+            null,
+            isset($this->server['keepalive']) ? $this->server['keepalive'] : false,
+            isset($this->server['heartbeat']) ? $this->server['heartbeat'] : 0
+        );
 
         if (!$this->connection) {
             \Yii::log('[' . get_class() . '] Cannot create connection', 'error');
